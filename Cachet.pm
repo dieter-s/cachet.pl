@@ -20,6 +20,7 @@ sub new {
 	$self->{'email'} = '';
 	$self->{'password'} = '';
 	$self->{'apiToken'} = '';
+	$self->{'caCert'} = '';
 	bless($self,$pkg);
 	return $self;
 }
@@ -43,6 +44,10 @@ sub getApiToken {
 	return $self->{'apiToken'};
 }
 
+sub getCaCert {
+	my $self = shift;
+	return $self->{'caCert'};
+}
 
 sub setBaseUrl {
 	my $self = shift;
@@ -65,6 +70,12 @@ sub setApiToken {
 	my $self = shift;
 	my $token = shift;
 	$self->{'apiToken'} = $token;
+}
+
+sub setCaCert {
+	my $self = shift;
+	my $cert = shift;
+	$self->{'caCert'} = $cert;
 }
 
 sub sanityCheck {
@@ -93,6 +104,11 @@ sub curlGet {
 	$curl->setopt(CURLOPT_URL,$url);
 	$curl->setopt(CURLOPT_WRITEDATA,\$responseBody);
 
+	if($self->{'caCert'}) {
+		$curl->setopt(CURLOPT_SSL_VERIFYPEER, 1);
+		$curl->setopt(CURLOPT_CAINFO, $self->{'caCert'});
+	}
+
 	my $retcode = $curl->perform;	
 	if($retcode == 0) {
 		my $decoded = decode_json($responseBody);
@@ -115,6 +131,11 @@ sub curlPut {
 	$curl->setopt(CURLOPT_URL,$url);
 	$curl->setopt(CURLOPT_CUSTOMREQUEST,'PUT');
 	$curl->setopt(CURLOPT_POSTFIELDS,$data);
+
+	if($self->{'caCert'}) {
+		$curl->setopt(CURLOPT_SSL_VERIFYPEER, 1);
+		$curl->setopt(CURLOPT_CAINFO, $self->{'caCert'});
+	}
 	
 	my @HTTPHeader = (); 
 	my $authorisationHeader = 'Authorization: Basic ' . encode_base64($self->{'email'} . ':' . $self->{'password'});
@@ -148,6 +169,11 @@ sub curlPost {
 	$curl->setopt(CURLOPT_URL,$url);
 	$curl->setopt(CURLOPT_POST,1);
 	$curl->setopt(CURLOPT_POSTFIELDS,$data);
+
+	if($self->{'caCert'}) {
+		$curl->setopt(CURLOPT_SSL_VERIFYPEER, 1);
+		$curl->setopt(CURLOPT_CAINFO, $self->{'caCert'});
+	}
 	
 	my @HTTPHeader = (); 
 	my $authorisationHeader = 'Authorization: Basic ' . encode_base64($self->{'email'} . ':' . $self->{'password'});
